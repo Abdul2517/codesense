@@ -46,6 +46,7 @@ Return only the JSON object, nothing else."""
         )
 
         raw = response.choices[0].message.content.strip()
+        print(f"Raw Groq response: {raw[:500]}")
 
         # Find JSON object in response
         start = raw.find('{')
@@ -57,7 +58,7 @@ Return only the JSON object, nothing else."""
 
     except json.JSONDecodeError as e:
         print(f"JSON parse error: {e}")
-        print(f"Raw response: {raw}")
+        print(f"Failed raw: {raw}")
         return {
             "summary": "Review completed but response could not be parsed.",
             "consistency": "Unknown",
@@ -67,6 +68,7 @@ Return only the JSON object, nothing else."""
             "confidence": 0.0
         }
     except Exception as e:
+        print(f"Review exception: {e}")
         return {
             "summary": f"Review failed: {str(e)}",
             "consistency": "Unknown",
