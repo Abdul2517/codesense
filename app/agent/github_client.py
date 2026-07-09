@@ -43,12 +43,53 @@ def get_pr_diff(repo_full_name: str, pr_number: int, token: str) -> str:
     )
     return response.text
 
-def post_review_comment(repo_full_name: str, pr_number: int, review: str, token: str):
+def format_review(review: dict) -> str:
+    verdict = review.get("verdict", "COMMENT")
+    confidence = review.get("confidence", 0.0)
+
+    verdict_emoji = {
+        "APPROVE": "✅",
+        "REQUEST_CHANGES": "❌",
+        "COMMENT": "💬"
+    }.get(verdict, "💬")
+
+    confidence_bar = int(confidence * 10)
+    confidence_display = "█" * confidence_bar + "░" * (10 - confidence_bar)
+
+    issues = review.get("issues", [])
+    suggestions = review.get("suggestions", [])
+
+    issues_text = "\n".join(f"- {i}" for i in issues) if issues else "No issues found ✓"
+    suggestions_text = "\n".join(f"- {s}" for s in suggestions) if suggestions else "No suggestions"
+
+    return f"""## 🤖 CodeSense AI Review
+
+**Verdict:** {verdict_emoji} {verdict}
+**Confidence:** `{confidence_display}` {int(confidence * 100)}%
+
+### 📋 Summary
+{review.get("summary", "N/A")}
+
+### 🔄 Consistency
+{review.get("consistency", "N/A")}
+
+### 🐛 Issues
+{issues_text}
+
+### 💡 Suggestions
+{suggestions_text}
+
+---
+*Powered by CodeSense + Llama 3.3 70b*"""
+
+def post_review_comment(repo_full_name: str, pr_number: int, review: dict, token: str):
+    body = format_review(review)
+
     httpx.post(
         f"https://api.github.com/repos/{repo_full_name}/issues/{pr_number}/comments",
         headers={
             "Authorization": f"Bearer {token}",
             "Accept": "application/vnd.github+json"
         },
-        json={"body": f"## 🤖 CodeSense AI Review\n\n{review}"}
+        json={"body": body}
     )
