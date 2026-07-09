@@ -1,19 +1,21 @@
 import os
 
-IGNORED_DIRS = {'.git', 'venv', '__pycache__', '.env', 'node_modules'}
-IGNORED_EXTENSIONS = {'.pyc', '.pem', '.zip', '.png', '.jpg', '.exe'}
-MAX_FILE_SIZE = 10000  # characters per file
-MAX_TOTAL_SIZE = 50000  # total context characters
+IGNORED_DIRS = {'.git', 'venv', '__pycache__', '.env', 'node_modules', '.pytest_cache'}
+IGNORED_EXTENSIONS = {'.pyc', '.pem', '.zip', '.png', '.jpg', '.exe', '.md', '.txt', '.gitignore'}
+IGNORED_FILES = {'LICENSE', 'README.md', 'requirements.txt', 'test.md'}
+MAX_FILE_SIZE = 3000
+MAX_TOTAL_SIZE = 15000
 
 def get_codebase_context(repo_path: str = ".") -> str:
     context_parts = []
     total_size = 0
 
     for root, dirs, files in os.walk(repo_path):
-        # Remove ignored directories
         dirs[:] = [d for d in dirs if d not in IGNORED_DIRS]
 
         for file in files:
+            if file in IGNORED_FILES:
+                continue
             ext = os.path.splitext(file)[1]
             if ext in IGNORED_EXTENSIONS:
                 continue
@@ -29,7 +31,7 @@ def get_codebase_context(repo_path: str = ".") -> str:
                     content = content[:MAX_FILE_SIZE] + "\n... (truncated)"
 
                 file_context = f"### {relative_path}\n```\n{content}\n```\n"
-                
+
                 if total_size + len(file_context) > MAX_TOTAL_SIZE:
                     break
 
