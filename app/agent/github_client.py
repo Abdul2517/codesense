@@ -8,10 +8,15 @@ load_dotenv()
 
 APP_ID = os.getenv("GITHUB_APP_ID")
 PRIVATE_KEY_PATH = os.getenv("GITHUB_PRIVATE_KEY_PATH")
+PRIVATE_KEY_CONTENT = os.getenv("GITHUB_PRIVATE_KEY")
 
 def generate_jwt() -> str:
-    with open(PRIVATE_KEY_PATH, "r") as f:
-        private_key = f.read()
+    # Use env variable if available (production), otherwise read from file (local)
+    if PRIVATE_KEY_CONTENT:
+        private_key = PRIVATE_KEY_CONTENT.replace("\\n", "\n")
+    else:
+        with open(PRIVATE_KEY_PATH, "r") as f:
+            private_key = f.read()
 
     payload = {
         "iat": int(time.time()) - 60,
