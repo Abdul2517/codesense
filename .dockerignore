@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+*.pyc
+*.pem
+.env
+.git/
+ngrok*
+test.md
