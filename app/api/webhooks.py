@@ -6,6 +6,8 @@ from fastapi import APIRouter, Request, HTTPException, BackgroundTasks
 from dotenv import load_dotenv
 from app.agent.reviewer import review_code
 from app.agent.github_client import get_installation_token, get_pr_diff, post_review_comment
+from app.knowledge.vector_store import ingest_merged_pr
+from app.knowledge.rule_extractor import maybe_extract_rules
 
 load_dotenv()
 
@@ -62,6 +64,21 @@ async def process_pr(repo_full_name: str, pr_number: int, pr_title: str, install
         import traceback
         traceback.print_exc()
 
+async def process_merged_pr(repo_full_name: str, pr_number: int, pr_title: str, installation_id: int):
+    try:
+        print(f"PR #{pr_number} was merged — ingesting into knowledge base...")
+        token = get_installation_token(installation_id)
+        diff = get_pr_diff(repo_full_name, pr_number, token)
+
+        if diff and len(diff.strip()) > 0:
+            ingest_merged_pr(pr_number, pr_title, diff, repo_full_name)
+            maybe_extract_rules(repo_full_name)
+
+    except Exception as e:
+        print(f"❌ Error processing merged PR #{pr_number}: {e}")
+        import traceback
+        traceback.print_exc()
+
 @router.post("/github")
 async def github_webhook(request: Request, background_tasks: BackgroundTasks):
     payload_bytes = await request.body()
@@ -80,6 +97,7 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks):
         pr_number = pr.get("number", "")
         repo_name = payload.get("repository", {}).get("full_name", "")
         installation_id = payload.get("installation", {}).get("id", "")
+        merged = pr.get("merged", False)
 
         print(f"PR #{pr_number} — {action} — {repo_name} — {pr_title}")
         print(f"Installation ID: {installation_id}")
@@ -90,5 +108,12 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks):
             )
             print(f"Background task queued for PR #{pr_number}")
             return {"status": "review started", "pr": pr_number}
+
+        if action == "closed" and merged:
+            background_tasks.add_task(
+                process_merged_pr, repo_name, pr_number, pr_title, installation_id
+            )
+            print(f"Merged PR #{pr_number} queued for ingestion")
+            return {"status": "ingestion started", "pr": pr_number}
 
     return {"status": "event ignored", "event": event}
