@@ -1,7 +1,7 @@
 # CodeSense
 
 AI-powered GitHub App that reviews pull requests and learns your team's coding standards automatically.
-
+**[🚀 Live Dashboard](https://codesense-dashboard.vercel.app)** · **[⚡ API](https://ample-spirit-production-06a2.up.railway.app)**
 ## What it does
 
 CodeSense installs as a GitHub App on your repository. Every time a pull request is opened or updated, it automatically reads the code diff, reads your existing codebase for context, sends everything to Llama 3.3 70b via Groq, and posts a structured review comment with verdict, confidence score, issues, and suggestions.
