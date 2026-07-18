@@ -52,10 +52,10 @@ Most AI code review tools just wrap GPT with a generic prompt. CodeSense reads y
 - Completed: AI code review with Groq
 - Completed: Codebase context scanning
 - Completed: Confidence scoring
-- Coming: Self-learning from merged PRs
-- Coming: Rule extraction engine
-- Coming: React dashboard
-- Coming: Railway deployment
+- Completed: Self-learning from merged PRs
+Completed: Rule extraction engine  
+Coming: React dashboard
+Completed: Railway deployment
 
 ## License
 
