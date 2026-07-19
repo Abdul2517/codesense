@@ -57,6 +57,8 @@ async def process_pr(repo_full_name: str, pr_number: int, pr_title: str, install
 
         print(f"Posting review comment on PR #{pr_number}...")
         post_review_comment(repo_full_name, pr_number, review, token)
+        from app.db_ops import save_review
+        save_review(repo_full_name, pr_number, pr_title, review)
         print(f"✅ Review posted successfully on PR #{pr_number}")
 
     except Exception as e:
